@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { levelAllows } from '../../shared/sharing'
-import type { AccountDto, BudgetDto, PayCandidateDto, PayChangesInput, PayEventDto, PlanItemInput } from '../../shared/types'
+import type { AccountDto, BudgetDto, PayCandidateDto, PayChangesInput, PayEventDto, PlanProposalDto } from '../../shared/types'
 import { SearchLink } from '../components/AppLink'
 import { PayPage } from '../components/budgets/PayPage'
 import { PayPills } from '../components/budgets/PayPills'
@@ -91,9 +91,9 @@ function BudgetsPage() {
   })
   const { data: proposal } = useQuery({
     queryKey: ['plan-proposal'],
-    queryFn: () =>
-      unwrap<{ expectedIncomeCents: number; items: PlanItemInput[] } | null>(client.api['plan-template']['from-last-pay'].$post()),
-    enabled: Boolean(wizardFor && wizardBudget?.id === wizardFor && wizardBudget.kind === 'personal'),
+    queryFn: () => unwrap<PlanProposalDto | null>(client.api['plan-template']['from-last-pay'].$post()),
+    // The wizard's last step, and Edit mode, which is only ever your own pay.
+    enabled: Boolean((wizardFor && wizardBudget?.id === wizardFor && wizardBudget.kind === 'personal') || editing),
   })
 
   const { data: period, isError } = useQuery({
@@ -284,6 +284,7 @@ function BudgetsPage() {
           onSetUpJoint={() => joint && setWizardFor(joint.id)}
           categories={categories}
           spendingHistory={{ personal: personalHistory, joint: jointHistory }}
+          paySplit={proposal}
           users={users}
           jointBudget={jointReady ? joint : undefined}
           onSetAnchor={async (anchorUserId) => {

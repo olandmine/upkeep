@@ -10,6 +10,7 @@ import {
   startDraft,
   withCreate,
   withoutCreate,
+  withPaySplit,
   type DraftBucket,
   type PayDraft,
 } from '../../src/web/lib/pay-view'
@@ -1164,5 +1165,64 @@ describe('Standard pay', () => {
 
   test('pace is null', () => {
     expect(buildPayView(standardExample()).pace).toBeNull()
+  })
+})
+
+describe('withPaySplit', () => {
+  const accounts = [account('rainy', 'INDIVIDUAL'), account('house', 'JOINT'), account('holiday', 'JOINT'), account('spare', 'INDIVIDUAL'), account('kitty', 'JOINT')]
+  const input = (draft?: PayDraft) => ({ ...example(undefined, { accounts }), draft: draft ?? null })
+  const saved = buildPayView(input())
+  const split = (saverId: string, amountCents: number) => ({ saverId, amountCents })
+  const fill = (draft: PayDraft, items: ReturnType<typeof split>[]) => withPaySplit(draft, saved, items, accounts, () => 'temp')
+
+  test('sets the amount of a Saver already in the plan, and leaves everything else', () => {
+    const draft = fill(startDraft(saved), [split('rainy', 30_000)])
+    expect(draft.amounts).toEqual({ 'saver:rainy': 30_000 })
+    expect(draft.texts).toEqual({ 'saver:rainy': '300.00' })
+    const v = buildPayView(input(draft))
+    expect(changedKeys(v, saved)).toEqual(['saver:rainy'])
+    expect(draftChanges(v, saved, draft, '2026-10-30', 'every-pay').savers).toEqual({
+      set: [{ saverAccountId: 'rainy', amountCents: 30_000 }],
+      remove: [],
+    })
+  })
+
+  test('keeps amounts tried on other rows, and replaces a half-typed one on its own row', () => {
+    const start = { ...startDraft(saved), amounts: { 'line:groceries': 50_000 }, texts: { 'line:groceries': '500.00', 'saver:rainy': '3x' } }
+    const draft = fill(start, [split('rainy', 30_000)])
+    expect(draft.amounts).toEqual({ 'line:groceries': 50_000, 'saver:rainy': 30_000 })
+    expect(draft.texts).toEqual({ 'line:groceries': '500.00', 'saver:rainy': '300.00' })
+  })
+
+  test.each([
+    ['spare', 'yours'],
+    ['kitty', 'joint'],
+  ])('adds %s to %s when it is not in the plan', (saverId, section) => {
+    const draft = fill(startDraft(saved), [split(saverId, 12_000)])
+    expect(draft.creates).toEqual([
+      { tempId: 'temp', section, name: `${saverId} Saver`, amountCents: 12_000, categoryIds: [], saverAccountId: saverId },
+    ])
+    const changes = draftChanges(buildPayView(input(draft)), saved, draft, '2026-10-30', 'every-pay')
+    expect(changes.savers.set).toEqual([{ saverAccountId: saverId, amountCents: 12_000 }])
+    expect(isStructural(changes, saved)).toBe(true)
+  })
+
+  test('filling twice changes nothing more', () => {
+    const once = fill(startDraft(saved), [split('spare', 12_000), split('rainy', 30_000)])
+    expect(fill(once, [split('spare', 12_000), split('rainy', 30_000)]).creates).toEqual(once.creates)
+    expect(buildPayView(input(fill(once, [split('spare', 15_000)]))).sections.flatMap((s) => s.buckets).filter((b) => b.saverAccountId === 'spare')).toMatchObject([
+      { key: 'new:temp', amountCents: 15_000 },
+    ])
+  })
+
+  test('brings back a Saver removed in this edit', () => {
+    const draft = fill({ ...startDraft(saved), removals: ['saver:rainy', 'line:eating'] }, [split('rainy', 30_000)])
+    expect(draft.removals).toEqual(['line:eating'])
+    expect(bucket(buildPayView(input(draft)), 'saver:rainy')?.amountCents).toBe(30_000)
+  })
+
+  test('skips a Saver it can no longer find', () => {
+    const start = startDraft(saved)
+    expect(fill(start, [split('gone', 12_000)])).toEqual(start)
   })
 })

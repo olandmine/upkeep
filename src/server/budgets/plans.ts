@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, ne, sql } from 'drizzle-orm'
-import type { PayChangesInput, PayPlanDto, PlanItemDto, PlanItemInput, PlanTemplateDto } from '../../shared/types'
+import type { PayChangesInput, PayPlanDto, PlanItemDto, PlanItemInput, PlanProposalDto, PlanTemplateDto } from '../../shared/types'
 import type { Db } from '../db/client'
 import * as s from '../db/schema'
 import { periodRangeUtc, todayLocal, type LocalDate } from './dates'
@@ -418,7 +418,7 @@ export function proposeFromLastPay(
   db: Db,
   userId: string,
   _tz: string,
-): { expectedIncomeCents: number; items: PlanItemInput[] } | null {
+): PlanProposalDto | null {
   const last = db
     .select({ tx: s.transactions })
     .from(s.payEvents)
@@ -486,8 +486,8 @@ export function proposeFromLastPay(
     items: flows.map((f) => {
       const lineId = linked.get(f.saverId)
       return lineId
-        ? { targetKind: 'line' as const, lineId, saverAccountId: null, amountCents: f.cents }
-        : { targetKind: 'saver' as const, lineId: null, saverAccountId: f.saverId, amountCents: f.cents }
+        ? { targetKind: 'line' as const, lineId, saverAccountId: null, saverId: f.saverId, amountCents: f.cents }
+        : { targetKind: 'saver' as const, lineId: null, saverAccountId: f.saverId, saverId: f.saverId, amountCents: f.cents }
     }),
   }
 }

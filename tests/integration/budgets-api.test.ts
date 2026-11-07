@@ -249,8 +249,28 @@ test('plan-template/from-last-pay returns a proposal', async () => {
   await t.engine.incremental(connId)
   expect((await call('/api/plan-template/from-last-pay', { method: 'POST' })).body).toEqual({
     expectedIncomeCents: 400000,
-    items: [{ targetKind: 'saver', lineId: null, saverAccountId: 'acc-rent', amountCents: 80000 }],
+    items: [{ targetKind: 'saver', lineId: null, saverAccountId: 'acc-rent', saverId: 'acc-rent', amountCents: 80000 }],
   })
+})
+
+test('plan-template/from-last-pay says which Saver a line in the proposal moves money to', async () => {
+  await markPay()
+  addTx({
+    id: 'x1',
+    accountId: 'acc-rent',
+    amountCents: 80000,
+    createdAt: local('2026-02-26', '10:00'),
+    transferAccountId: 'acc-spending',
+  })
+  await t.engine.incremental(connId)
+  const { id: budgetId } = (await call('/api/budgets')).body.find((b: { kind: string }) => b.kind === 'personal')
+  const { body: fund } = await call(`/api/budgets/${budgetId}/lines`, {
+    method: 'POST',
+    body: { kind: 'fund', name: 'Rent', amountCents: 80000, categoryIds: [], saverAccountId: 'acc-rent' },
+  })
+  expect((await call('/api/plan-template/from-last-pay', { method: 'POST' })).body.items).toEqual([
+    { targetKind: 'line', lineId: fund.id, saverAccountId: null, saverId: 'acc-rent', amountCents: 80000 },
+  ])
 })
 
 test('schedule edits and validation', async () => {

@@ -9,6 +9,7 @@ import type {
   LineInputDto,
   PayChangesInput,
   PayPlanDto,
+  PlanProposalDto,
   SpendingHistoryDto,
   StandardPayDto,
   UserDto,
@@ -28,6 +29,7 @@ import {
   startDraft,
   withCreate,
   withoutCreate,
+  withPaySplit,
   type Bucket,
   type PayDraft,
   type SectionId,
@@ -54,6 +56,8 @@ interface Props {
   categories?: CategoryDto[]
   /** Recent spending on the person's budget and on Joint, for what the add form suggests. */
   spendingHistory?: { personal?: SpendingHistoryDto; joint?: SpendingHistoryDto }
+  /** What Up moved after the last pay, which Edit can start from. Undefined until it has loaded; null when there is no pay to go on. */
+  paySplit?: PlanProposalDto | null
   /** Loading and failed plans show a message instead of the sections, and offer no Edit. */
   planState?: 'ready' | 'loading' | 'error'
   /** The person's budget, which decides whether Edit is offered. */
@@ -143,6 +147,7 @@ function PayBody({
   goals,
   categories = [],
   spendingHistory,
+  paySplit,
   budget,
   period,
   jointPeriod,
@@ -433,6 +438,28 @@ function PayBody({
             <div className="flex justify-end">{button}</div>
           )
         })()
+      )}
+      {/* A Standard pay is the usual figures, so it isn't filled in from one pay. */}
+      {editing && !standard && paySplit !== undefined && (
+        <Card>
+          {paySplit && paySplit.items.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-fg-2">
+                {`Up moved money into ${paySplit.items.length} ${paySplit.items.length === 1 ? 'Saver' : 'Savers'} after your last pay of ${money(paySplit.expectedIncomeCents)}.`}
+              </p>
+              <Button
+                onClick={() => {
+                  patchDraft((d) => withPaySplit(d, saved, paySplit.items, accounts, newTempId))
+                  setOpen(null)
+                }}
+              >
+                Start from pay split
+              </Button>
+            </div>
+          ) : (
+            <p className="text-fg-2">No Saver transfers found after your last pay.</p>
+          )}
+        </Card>
       )}
       <PaySummary view={view} period={period} payDate={payDate} standard={standard} />
       {/* Without Joint there is nothing to add to; the prompt below stands in for the shared section. */}

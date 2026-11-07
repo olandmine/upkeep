@@ -534,6 +534,49 @@ export function withoutCreate(draft: PayDraft, tempId: string): PayDraft {
   }
 }
 
+/**
+ * The draft with each Saver set to what Up moved into it, added to the plan if it isn't there yet.
+ * `saved` is the view without the draft, as a Saver removed in this edit comes back. Other rows stay as they are.
+ */
+export function withPaySplit(
+  draft: PayDraft,
+  saved: PayView,
+  split: readonly { saverId: string; amountCents: number }[],
+  accounts: AccountDto[],
+  newId: () => string,
+): PayDraft {
+  let next = draft
+  const setAmount = (key: string, cents: number) => {
+    next = {
+      ...next,
+      amounts: { ...next.amounts, [key]: cents },
+      texts: { ...next.texts, [key]: (cents / 100).toFixed(2) },
+    }
+  }
+  for (const { saverId, amountCents } of split) {
+    const key = `saver:${saverId}`
+    const added = next.creates.find((c) => c.saverAccountId === saverId && (c.section === 'yours' || c.section === 'joint'))
+    if (added) {
+      setAmount(`new:${added.tempId}`, amountCents)
+    } else if (saved.liveKeys.includes(key)) {
+      next = { ...next, removals: next.removals.filter((k) => k !== key) }
+      setAmount(key, amountCents)
+    } else {
+      const account = accounts.find((a) => a.id === saverId)
+      if (!account) continue
+      next = withCreate(next, {
+        tempId: newId(),
+        section: account.ownership === 'JOINT' ? 'joint' : 'yours',
+        name: account.displayName,
+        amountCents,
+        categoryIds: [],
+        saverAccountId: saverId,
+      })
+    }
+  }
+  return next
+}
+
 export function draftChanges(
   view: PayView,
   saved: PayView,

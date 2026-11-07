@@ -74,6 +74,7 @@ beforeEach(() => {
       if (path.startsWith('/api/budgets/b1/period')) return personalPeriod()
       if (path.startsWith('/api/budgets/j1/period')) return Response.json(jointPeriod)
       if (path === '/api/budgets/standard-pay/u1') return standardResponse()
+      if (path === '/api/plan-template/from-last-pay') return Response.json(null)
       if (path.startsWith('/api/plans/')) return planResponse()
       return Response.json([])
     }),

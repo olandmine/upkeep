@@ -674,3 +674,38 @@ describe('a Saver only in this pay', () => {
     expect(screen.getByRole('option', { name: 'car Saver' })).toBeEnabled()
   })
 })
+
+describe('Start from pay split', () => {
+  const paySplit = {
+    expectedIncomeCents: 412_000,
+    items: [{ targetKind: 'saver' as const, lineId: null, saverAccountId: 'rainy', saverId: 'rainy', amountCents: 30_000 }],
+  }
+  const button = () => screen.queryByRole('button', { name: 'Start from pay split' })
+
+  test('is only offered in Edit mode, and saves nothing until a choice to apply', async () => {
+    const { onApply } = mount({}, { paySplit })
+    expect(button()).not.toBeInTheDocument()
+    await startEditing()
+    expect(screen.getByText('Up moved money into 1 Saver after your last pay of $4,120.00.')).toBeInTheDocument()
+    await userEvent.click(button()!)
+    expect(box('rainy Saver')).toHaveValue('300.00')
+    expect(row('rainy Saver')).toHaveTextContent('Was $250.00')
+    expect(onApply).not.toHaveBeenCalled()
+    await userEvent.click(applyAll())
+    expect(onApply).toHaveBeenCalledWith(none({ savers: { set: [{ saverAccountId: 'rainy', amountCents: 30_000 }], remove: [] } }))
+  })
+
+  test.each([null, { expectedIncomeCents: 412_000, items: [] }])('says when nothing moved (%#)', async (empty) => {
+    mount({}, { paySplit: empty })
+    await startEditing()
+    expect(screen.getByText('No Saver transfers found after your last pay.')).toBeInTheDocument()
+    expect(button()).not.toBeInTheDocument()
+  })
+
+  test('stays out of the way while it loads', async () => {
+    mount()
+    await startEditing()
+    expect(button()).not.toBeInTheDocument()
+    expect(screen.queryByText('No Saver transfers found after your last pay.')).not.toBeInTheDocument()
+  })
+})

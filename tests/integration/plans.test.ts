@@ -215,8 +215,8 @@ test('proposeFromLastPay', () => {
   expect(proposeFromLastPay(db, 'u1', TZ)).toEqual({
     expectedIncomeCents: 400000,
     items: [
-      { targetKind: 'line', lineId: rentLine, saverAccountId: null, amountCents: 80000 },
-      { targetKind: 'saver', lineId: null, saverAccountId: 'saver-food', amountCents: 30000 },
+      { targetKind: 'line', lineId: rentLine, saverAccountId: null, saverId: 'saver-rent', amountCents: 80000 },
+      { targetKind: 'saver', lineId: null, saverAccountId: 'saver-food', saverId: 'saver-food', amountCents: 30000 },
     ],
   })
   expect(proposeFromLastPay(db, 'u2', TZ)).toBeNull()

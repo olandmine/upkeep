@@ -217,6 +217,12 @@ export interface PlanItemInput {
   amountCents: number
 }
 
+/** A plan built from what Up moved after the last pay. Each item also names the Saver the money went to. */
+export interface PlanProposalDto {
+  expectedIncomeCents: number
+  items: (PlanItemInput & { saverId: string })[]
+}
+
 export interface PlanItemDto extends PlanItemInput {
   id: string
   targetName: string

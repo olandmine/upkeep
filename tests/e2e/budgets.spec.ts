@@ -55,6 +55,15 @@ test('mark pay, create buckets, and try changes to the plan', async ({ page }) =
   await page.getByRole('button', { name: 'Discard' }).click()
   await expect(groceries).toContainText('$600.00')
 
+  // Start from pay split puts a Saver back to what Up moved into it, without saving anything.
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  const rentAmount = page.getByLabel('Rent amount in dollars')
+  const moved = await rentAmount.inputValue()
+  await rentAmount.fill('1')
+  await page.getByRole('button', { name: 'Start from pay split' }).click()
+  await expect(rentAmount).toHaveValue(moved)
+  await page.getByRole('button', { name: 'Discard' }).click()
+
   await page.getByRole('button', { name: 'Edit', exact: true }).click()
   await page.getByLabel('Groceries amount in dollars').fill('650')
   await page.getByRole('button', { name: 'Apply to every pay' }).click()
