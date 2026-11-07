@@ -82,9 +82,15 @@ export function SetupWizard(props: Props) {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [found, setFound] = useState<{ count: number; since: string | null } | null>(null)
   const [busy, setBusy] = useState(false)
-  const [drafts, setDrafts] = useState<DraftLine[]>(() =>
-    savers.map((s) => ({ key: s.id, saverId: s.id, name: s.displayName, kind: 'fund', amount: '', categoryId: '', skipped: false })),
-  )
+  // Only rows that have been changed, and new buckets: Savers can still be loading when the wizard opens.
+  const [changed, setChanged] = useState<DraftLine[]>([])
+  const drafts: DraftLine[] = [
+    ...savers.map(
+      (s): DraftLine =>
+        changed.find((d) => d.key === s.id) ?? { key: s.id, saverId: s.id, name: s.displayName, kind: 'fund', amount: '', categoryId: '', skipped: false },
+    ),
+    ...changed.filter((d) => !d.saverId),
+  ]
 
   if (budget.setup === 'partner-not-connected') {
     const anchor = users.find((u) => u.id === budget.anchorUserId)?.displayName
@@ -109,7 +115,10 @@ export function SetupWizard(props: Props) {
       setBusy(false)
     }
   }
-  const set = (key: string, patch: Partial<DraftLine>) => setDrafts((prev) => prev.map((d) => (d.key === key ? { ...d, ...patch } : d)))
+  const set = (key: string, patch: Partial<DraftLine>) => {
+    const next = { ...drafts.find((d) => d.key === key)!, ...patch }
+    setChanged((prev) => (prev.some((d) => d.key === key) ? prev.map((d) => (d.key === key ? next : d)) : [...prev, next]))
+  }
   const parents = categories.filter((c) => c.parentId === null)
   const label = (d: DraftLine) => d.name || 'new bucket'
   const ready = drafts.filter((d) => !d.skipped && d.name.trim() && parseDollars(d.amount) !== null)
@@ -244,11 +253,12 @@ export function SetupWizard(props: Props) {
                 </Button>
               </div>
             ))}
+          {ready.length === 0 && <p className="type-caption text-fg-3">A bucket needs a name and an amount before it can be created.</p>}
           <div className="flex flex-wrap justify-between gap-2">
             <Button
               variant="ghost"
               onClick={() =>
-                setDrafts((prev) => [
+                setChanged((prev) => [
                   ...prev,
                   { key: `new-${prev.length}`, saverId: null, name: '', kind: 'spending', amount: '', categoryId: '', skipped: false },
                 ])

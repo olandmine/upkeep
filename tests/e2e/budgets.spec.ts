@@ -16,6 +16,7 @@ test('mark pay, create buckets, and try changes to the plan', async ({ page }) =
   await expect(page.getByText(/^Found \d+ paydays since/)).toBeVisible()
   await page.getByRole('button', { name: 'Continue' }).click()
 
+  await expect(page.getByLabel('Amount for Food')).toBeVisible()
   await page.getByRole('button', { name: 'Add a spending bucket' }).click()
   await page.getByLabel('Name for new bucket').fill('Groceries')
   await page.getByLabel('Amount for Groceries').fill('600')

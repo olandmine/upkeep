@@ -143,6 +143,45 @@ test('wizard step 2: Savers default to Saving, can become Spending, can be skipp
   ])
 })
 
+test('wizard step 2: Savers that load after the wizard opens are listed, and keep what was typed', async () => {
+  const props = {
+    budget: budget(),
+    users,
+    candidates,
+    categories,
+    proposal: null,
+    onMarkPay: vi.fn().mockResolvedValue({ count: 8, since: '2026-01-01' }),
+    onSetAnchor: vi.fn().mockResolvedValue(undefined),
+    onCreateLines: vi.fn().mockResolvedValue(undefined),
+    onSavePlan: vi.fn().mockResolvedValue(undefined),
+    onDone: vi.fn(),
+  }
+  const { rerender } = render(<SetupWizard {...props} savers={[]} />)
+  await userEvent.click(screen.getAllByRole('button', { name: /This is my pay/ })[0])
+  await userEvent.click(await screen.findByRole('button', { name: 'Continue' }))
+
+  rerender(<SetupWizard {...props} savers={[saver('s1', 'Rent')]} />)
+  await userEvent.type(screen.getByLabelText('Amount for Rent'), '800')
+  rerender(<SetupWizard {...props} savers={[saver('s1', 'Rent'), saver('s2', 'Food')]} />)
+
+  expect(screen.getByLabelText('Amount for Rent')).toHaveValue('800')
+  expect(screen.getByLabelText('Amount for Food')).toBeInTheDocument()
+})
+
+test('wizard step 2: says what Create buckets needs while it is disabled', async () => {
+  wizard()
+  await userEvent.click(screen.getAllByRole('button', { name: /This is my pay/ })[0])
+  await userEvent.click(await screen.findByRole('button', { name: 'Continue' }))
+
+  const hint = 'A bucket needs a name and an amount before it can be created.'
+  expect(screen.getByRole('button', { name: 'Create buckets' })).toBeDisabled()
+  expect(screen.getByText(hint)).toBeInTheDocument()
+
+  await userEvent.type(screen.getByLabelText('Amount for Rent'), '800')
+  expect(screen.getByRole('button', { name: 'Create buckets' })).toBeEnabled()
+  expect(screen.queryByText(hint)).not.toBeInTheDocument()
+})
+
 test('wizard step 3: save the proposed plan or skip', async () => {
   const props = wizard({
     proposal: {
