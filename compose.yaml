@@ -1,0 +1,26 @@
+name: upkeep
+
+services:
+  upkeep:
+    build: .
+    restart: unless-stopped
+    init: true
+    ports:
+      - '127.0.0.1:3000:3000'
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: 3000
+      DATA_DIR: /data
+      TZ: ${TZ:-Australia/Sydney}
+    volumes:
+      - upkeep-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+
+volumes:
+  upkeep-data:
