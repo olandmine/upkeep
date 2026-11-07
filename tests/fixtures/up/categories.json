@@ -1,0 +1,286 @@
+[
+  {
+    "type": "categories",
+    "id": "good-life",
+    "attributes": {
+      "name": "Good Life"
+    },
+    "relationships": {
+      "parent": {
+        "data": null
+      },
+      "children": {
+        "data": [
+          {
+            "type": "categories",
+            "id": "restaurants-and-cafes"
+          },
+          {
+            "type": "categories",
+            "id": "takeaway"
+          },
+          {
+            "type": "categories",
+            "id": "pubs-and-bars"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "restaurants-and-cafes",
+    "attributes": {
+      "name": "Restaurants & Cafes"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "good-life"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "takeaway",
+    "attributes": {
+      "name": "Takeaway"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "good-life"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "pubs-and-bars",
+    "attributes": {
+      "name": "Pubs & Bars"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "good-life"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "personal",
+    "attributes": {
+      "name": "Personal"
+    },
+    "relationships": {
+      "parent": {
+        "data": null
+      },
+      "children": {
+        "data": [
+          {
+            "type": "categories",
+            "id": "clothing-and-accessories"
+          },
+          {
+            "type": "categories",
+            "id": "health-and-medical"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "clothing-and-accessories",
+    "attributes": {
+      "name": "Clothing & Accessories"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "personal"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "health-and-medical",
+    "attributes": {
+      "name": "Health & Medical"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "personal"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "home",
+    "attributes": {
+      "name": "Home"
+    },
+    "relationships": {
+      "parent": {
+        "data": null
+      },
+      "children": {
+        "data": [
+          {
+            "type": "categories",
+            "id": "groceries"
+          },
+          {
+            "type": "categories",
+            "id": "utilities"
+          },
+          {
+            "type": "categories",
+            "id": "rent-and-mortgage"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "groceries",
+    "attributes": {
+      "name": "Groceries"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "home"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "utilities",
+    "attributes": {
+      "name": "Utilities"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "home"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "rent-and-mortgage",
+    "attributes": {
+      "name": "Rent & Mortgage"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "home"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "transport",
+    "attributes": {
+      "name": "Transport"
+    },
+    "relationships": {
+      "parent": {
+        "data": null
+      },
+      "children": {
+        "data": [
+          {
+            "type": "categories",
+            "id": "fuel"
+          },
+          {
+            "type": "categories",
+            "id": "public-transport"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "fuel",
+    "attributes": {
+      "name": "Fuel"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "transport"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  },
+  {
+    "type": "categories",
+    "id": "public-transport",
+    "attributes": {
+      "name": "Public Transport"
+    },
+    "relationships": {
+      "parent": {
+        "data": {
+          "type": "categories",
+          "id": "transport"
+        }
+      },
+      "children": {
+        "data": []
+      }
+    }
+  }
+]

@@ -1,0 +1,118 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793275439091,
+      "tag": "0000_thin_wendell_vaughn",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793279033126,
+      "tag": "0001_empty_randall",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793306956365,
+      "tag": "0002_strong_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793309638870,
+      "tag": "0003_nice_sinister_six",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793333774499,
+      "tag": "0004_deep_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793451173141,
+      "tag": "0005_volatile_morlun",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793527884955,
+      "tag": "0006_abnormal_overlord",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1793536133916,
+      "tag": "0007_remarkable_odin",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793577768866,
+      "tag": "0008_wonderful_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793588696174,
+      "tag": "0009_slow_mandarin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793870146314,
+      "tag": "0010_sharing_level",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1793875615659,
+      "tag": "0011_rule_people",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793881723442,
+      "tag": "0012_goal_kinds",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1793913432361,
+      "tag": "0013_goals_reached",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1793928719870,
+      "tag": "0014_accent",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1793948060565,
+      "tag": "0015_onboarding",
+      "breakpoints": true
+    }
+  ]
+}

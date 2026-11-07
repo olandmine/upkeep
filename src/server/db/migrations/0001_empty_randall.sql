@@ -1,0 +1,1 @@
+ALTER TABLE `up_connections` ADD `synced_through` text;

@@ -1,0 +1,1 @@
+ALTER TABLE `debts` ADD `history_through` text;

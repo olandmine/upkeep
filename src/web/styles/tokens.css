@@ -1,0 +1,227 @@
+@import 'tailwindcss';
+
+:root {
+  /* Surfaces */
+  --bg-base: #0e0e11;
+  --bg-sunken: #0a0a0c;
+  --bg-raised: #15151a;
+  --bg-elevated: #1c1c22;
+  --bg-overlay: rgba(8, 8, 10, 0.72);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --highlight-top: rgba(255, 255, 255, 0.06);
+
+  /* Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #8a8a93;
+  --text-disabled: #52525b;
+
+  /* Accent */
+  --accent-amber: #f0a93b;
+  --accent: var(--accent-amber);
+  --accent-hover: #f7be63;
+  --accent-muted: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 35%, transparent);
+
+  /* Semantic */
+  --positive: #34d399;
+  --positive-muted: rgba(52, 211, 153, 0.12);
+  --negative: #f06161;
+  --negative-muted: rgba(240, 97, 97, 0.12);
+  --warning: #fb923c;
+  --warning-muted: rgba(251, 146, 60, 0.12);
+  --info: #4c8dff;
+  --info-muted: rgba(76, 141, 255, 0.12);
+
+  /* Categories */
+  --cat-blue: #4c8dff;
+  --cat-teal: #2dd4bf;
+  --cat-green: #4ade80;
+  --cat-orange: #f97316;
+  --cat-violet: #8b7cf6;
+  --cat-rose: #f06292;
+  --cat-yellow: #eab308;
+  --cat-slate: #94a3b8;
+
+  /* Type */
+  --font-sans: 'Inter Variable', 'Inter', 'Satoshi', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'PP Editorial New', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Elevation */
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* The highlight colours a person can pick (src/shared/accent.ts). The muted and glow shades follow --accent. */
+:root[data-accent='blue'] {
+  --accent: var(--cat-blue);
+  --accent-hover: #7aaaff;
+}
+:root[data-accent='violet'] {
+  --accent: var(--cat-violet);
+  --accent-hover: #a99df9;
+}
+:root[data-accent='rose'] {
+  --accent: var(--cat-rose);
+  --accent-hover: #f58ab0;
+}
+:root[data-accent='teal'] {
+  --accent: var(--cat-teal);
+  --accent-hover: #5eead4;
+}
+:root[data-accent='slate'] {
+  --accent: var(--cat-slate);
+  --accent-hover: #b4bfce;
+}
+
+@theme inline {
+  --color-base: var(--bg-base);
+  --color-sunken: var(--bg-sunken);
+  --color-raised: var(--bg-raised);
+  --color-elevated: var(--bg-elevated);
+  --color-overlay: var(--bg-overlay);
+  --color-line: var(--border-subtle);
+  --color-line-2: var(--border-default);
+  --color-line-3: var(--border-strong);
+  --color-fg: var(--text-primary);
+  --color-fg-2: var(--text-secondary);
+  --color-fg-3: var(--text-tertiary);
+  --color-fg-disabled: var(--text-disabled);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-positive: var(--positive);
+  --color-positive-muted: var(--positive-muted);
+  --color-negative: var(--negative);
+  --color-negative-muted: var(--negative-muted);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-info: var(--info);
+  --color-info-muted: var(--info-muted);
+  --color-cat-blue: var(--cat-blue);
+  --color-cat-teal: var(--cat-teal);
+  --color-cat-green: var(--cat-green);
+  --color-cat-orange: var(--cat-orange);
+  --color-cat-violet: var(--cat-violet);
+  --color-cat-rose: var(--cat-rose);
+  --color-cat-yellow: var(--cat-yellow);
+  --color-cat-slate: var(--cat-slate);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-float: var(--shadow-float);
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01';
+  font-size: 13px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Type scale */
+@utility type-kpi-xl {
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+@utility type-kpi {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+@utility type-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+@utility type-heading {
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+@utility type-body {
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+@utility type-label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+@utility type-caption {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.kpi-cents {
+  font-size: 0.55em;
+  vertical-align: 0.6em;
+  color: var(--text-secondary);
+}
+
+/* Visible focus on every interactive element */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+/* A goal that has just been reached fills its bar once. Without this block (reduced motion) nothing moves. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes goal-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  .goal-fill {
+    transform-origin: left;
+    animation: goal-fill 600ms ease-out 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
