@@ -10,7 +10,7 @@ test('set up, connect Up, recategorise and see the overview', async ({ page }) =
   await page.screenshot({ path: shot('setup') })
 
   await page.getByLabel('Your name').fill('Owner')
-  await page.getByLabel('Username').fill('owner')
+  await page.getByLabel('Your Up $handle').fill('$owner')
   await page.getByLabel('Password').fill('correct horse')
   await page.getByRole('button', { name: 'Create account' }).click()
   await expect(page).toHaveURL(/\/sharing$/)
@@ -25,7 +25,7 @@ test('set up, connect Up, recategorise and see the overview', async ({ page }) =
   await page.screenshot({ path: shot('connect-up-mobile'), fullPage: true })
   await page.getByRole('button', { name: 'Skip for now' }).click()
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible()
-  await expect(page.getByText('0 of 4 done')).toBeVisible()
+  await expect(page.getByText('0 of 3 done')).toBeVisible()
   await page.screenshot({ path: shot('getting-started-mobile'), fullPage: true })
 
   // A row's link lands on its card, in view on a phone.

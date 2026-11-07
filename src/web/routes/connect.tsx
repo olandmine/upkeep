@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 import type { SyncStatusDto, UserDto } from '../../shared/types'
@@ -26,33 +26,20 @@ export const Route = createFileRoute('/connect')({
 function ConnectUpPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { data: me } = useQuery(meQuery)
   const [token, setToken] = useState('')
-  const [handle, setHandle] = useState(me?.upDisplayName ?? '')
-  const typedHandle = handle.trim()
 
   const connect = useMutation({
-    mutationFn: () =>
-      unwrap<SyncStatusDto>(
-        client.api.settings['up-token'].$put({
-          json: { token: token.trim(), ...(typedHandle && { upDisplayName: typedHandle }) },
-        }),
-      ),
+    mutationFn: () => unwrap<SyncStatusDto>(client.api.settings['up-token'].$put({ json: { token: token.trim() } })),
     onSuccess: (status) => {
       queryClient.setQueryData(syncStatusQuery.queryKey, status)
       // Set directly rather than refetched, so a failed refetch can't send them back here.
-      queryClient.setQueryData(meQuery.queryKey, (m: UserDto | undefined) =>
-        m && { ...m, connectUpAnswered: true, upDisplayName: typedHandle || m.upDisplayName },
-      )
+      queryClient.setQueryData(meQuery.queryKey, (m: UserDto | undefined) => m && { ...m, connectUpAnswered: true })
       void queryClient.invalidateQueries()
       void navigate({ to: '/' })
     },
   })
   const skip = useMutation({
-    mutationFn: () =>
-      unwrap<UserDto>(
-        client.api.me.$patch({ json: { connectUpSkipped: true, ...(typedHandle && { upDisplayName: typedHandle }) } }),
-      ),
+    mutationFn: () => unwrap<UserDto>(client.api.me.$patch({ json: { connectUpSkipped: true } })),
     onSuccess: async (user) => {
       // A /me fetch still in flight would land after this and put the old answer back.
       await queryClient.cancelQueries({ queryKey: meQuery.queryKey })
@@ -88,18 +75,6 @@ function ConnectUpPage() {
               placeholder="up:yeah:…"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-            />
-          )}
-        </Field>
-        <Field label="Your Up $handle (optional)" hint="So joint spending on 2Up is matched to you as it imports.">
-          {(p) => (
-            <Input
-              {...p}
-              autoComplete="off"
-              maxLength={80}
-              placeholder="$yourname"
-              value={handle}
-              onChange={(e) => setHandle(e.target.value)}
             />
           )}
         </Field>

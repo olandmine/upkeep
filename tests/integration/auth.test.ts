@@ -1,4 +1,5 @@
 import { beforeEach, expect, test } from 'vitest'
+import { users } from '../../src/server/db/schema'
 import { createTestApp, OWNER, PARTNER, type TestApp } from '../helpers/app'
 
 let t: TestApp
@@ -39,8 +40,43 @@ test('login and me', async () => {
   expect(await wrong.json()).toEqual({ error: 'Wrong username or password.' })
   const cookie = await t.login(OWNER)
   const me = await (await t.json('/api/me', { cookie })).json()
-  expect(me).toMatchObject({ username: 'owner', displayName: 'Owner', upDisplayName: null })
+  expect(me).toMatchObject({ username: 'owner', displayName: 'Owner', upDisplayName: '$owner' })
   expect(me).not.toHaveProperty('passwordHash')
+})
+
+test('the Up $handle is the login, typed with or without the $', async () => {
+  const res = await t.json('/api/setup', { method: 'POST', body: { ...OWNER, username: ' $Sam.L ' } })
+  expect(res.status).toBe(201)
+  expect(await res.json()).toMatchObject({ username: 'sam.l', upDisplayName: '$Sam.L' })
+  for (const username of ['$Sam.L', '$sam.l', 'sam.l']) {
+    const login = await t.json('/api/auth/login', { method: 'POST', body: { username, password: OWNER.password } })
+    expect(login.status, username).toBe(200)
+  }
+})
+
+test('a handle typed without the $ is saved with it', async () => {
+  const res = await t.json('/api/setup', { method: 'POST', body: { ...OWNER, username: 'sam' } })
+  expect(await res.json()).toMatchObject({ username: 'sam', upDisplayName: '$sam' })
+})
+
+test.each(['', '$', '$sam!', 'two words'])('%j is not a usable handle', async (username) => {
+  const res = await t.json('/api/setup', { method: 'POST', body: { ...OWNER, username } })
+  expect(res.status).toBe(400)
+})
+
+test('changing the handle later leaves the login as it was', async () => {
+  const cookie = await t.setupOwner()
+  expect((await t.json('/api/me', { method: 'PATCH', body: { upDisplayName: '$renamed' }, cookie })).status).toBe(200)
+  expect((await t.json('/api/auth/login', { method: 'POST', body: OWNER })).status).toBe(200)
+  expect((await t.json('/api/auth/login', { method: 'POST', body: { ...OWNER, username: '$renamed' } })).status).toBe(401)
+})
+
+test('a login made before handles were the login still works', async () => {
+  await t.setupOwner()
+  t.db.update(users).set({ username: 'older.login', upDisplayName: null }).run()
+  const res = await t.json('/api/auth/login', { method: 'POST', body: { ...OWNER, username: 'older.login' } })
+  expect(res.status).toBe(200)
+  expect(await res.json()).toMatchObject({ username: 'older.login', upDisplayName: null })
 })
 
 test('rate limits login per username', async () => {
@@ -67,8 +103,10 @@ test('caps users at two and lists them', async () => {
 
 test('duplicate usernames are rejected', async () => {
   const cookie = await t.setupOwner()
-  const res = await t.json('/api/users', { method: 'POST', body: { ...PARTNER, username: 'OWNER' }, cookie })
-  expect(res.status).toBe(409)
+  for (const username of ['OWNER', '$owner']) {
+    const res = await t.json('/api/users', { method: 'POST', body: { ...PARTNER, username }, cookie })
+    expect(res.status, username).toBe(409)
+  }
 })
 
 test('csrf guard', async () => {

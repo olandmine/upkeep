@@ -59,7 +59,7 @@ export function ProfileCard({ me, onSave }: { me: UserDto; onSave: (patch: Profi
         <Field label="Display name">
           {(p) => <Input {...p} value={profile.displayName} onChange={(e) => setProfile({ ...profile, displayName: e.target.value })} />}
         </Field>
-        <Field label="Your Up $handle" hint="For example $yourname, so joint spending on 2Up can be matched to you." error={profileError}>
+        <Field label="Your Up $handle" hint="For example $yourname, so joint spending on 2Up can be matched to you. Changing it doesn't change your login." error={profileError}>
           {(p) => (
             <Input {...p} value={profile.upDisplayName} onChange={(e) => setProfile({ ...profile, upDisplayName: e.target.value })} />
           )}

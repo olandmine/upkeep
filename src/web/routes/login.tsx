@@ -36,7 +36,7 @@ function LoginPage() {
   return (
     <Onboarding title="Welcome back.">
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <Field label="Username">
+        <Field label="Up $handle or username">
           {(p) => (
             <Input
               {...p}

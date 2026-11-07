@@ -51,7 +51,9 @@ export function UsersCard({
         (open ? (
           <form onSubmit={submit} className="flex flex-col gap-3" noValidate>
             <Field label="Partner's name">{(p) => <Input {...p} value={form.displayName} onChange={set('displayName')} />}</Field>
-            <Field label="Username">{(p) => <Input {...p} autoComplete="off" value={form.username} onChange={set('username')} />}</Field>
+            <Field label="Their Up $handle" hint="They'll log in with this.">
+              {(p) => <Input {...p} autoComplete="off" maxLength={50} placeholder="$theirname" value={form.username} onChange={set('username')} />}
+            </Field>
             <Field label="Initial password" hint="At least 8 characters. They can change it in Settings." error={error}>
               {(p) => <Input {...p} type="password" autoComplete="new-password" value={form.password} onChange={set('password')} />}
             </Field>

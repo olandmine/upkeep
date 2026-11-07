@@ -8,7 +8,9 @@ import { hashPassword } from './passwords'
 
 export const MAX_USERS = 2
 
-export const normaliseUsername = (username: string) => username.trim().toLowerCase()
+// New logins are an Up $handle, typed with or without the "$".
+export const normaliseUsername = (username: string) => username.trim().replace(/^\$/, '').toLowerCase()
+const upHandle = (username: string) => `$${username.trim().replace(/^\$/, '')}`
 
 export function toUserDto(u: UserRow): UserDto {
   return {
@@ -42,7 +44,7 @@ export async function createUser(
     username: normaliseUsername(input.username),
     displayName: input.displayName.trim(),
     passwordHash: await hashPassword(input.password),
-    upDisplayName: null,
+    upDisplayName: upHandle(input.username),
     negativeStyle: 'minus',
     accent: 'amber',
     sharingLevel: null,

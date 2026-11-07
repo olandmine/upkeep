@@ -14,7 +14,7 @@ export function usersRoutes(deps: AppDeps) {
     .post('/', validate('json', NewUserSchema), async (c) => {
       if (countUsers(deps.db) >= MAX_USERS) return c.json({ error: 'Upkeep supports two users' }, 409)
       const input = c.req.valid('json')
-      if (findUserByUsername(deps.db, input.username)) return c.json({ error: 'That username is taken' }, 409)
+      if (findUserByUsername(deps.db, input.username)) return c.json({ error: 'That Up $handle is taken' }, 409)
       const user = await createUser(deps.db, { ...input, givenPassword: 'kept' }, deps.now())
       return c.json(toUserDto(user), 201)
     })

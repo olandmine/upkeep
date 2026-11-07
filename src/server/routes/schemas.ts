@@ -8,9 +8,9 @@ export const NewUserSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(1, 'Username is required')
+    .min(1, 'Up $handle is required')
     .max(50)
-    .regex(/^[a-zA-Z0-9._-]+$/, 'Username can use letters, numbers, dots, dashes and underscores'),
+    .regex(/^\$?[a-zA-Z0-9._-]+$/, 'Up $handle can use letters, numbers, dots, dashes and underscores'),
   displayName: z.string().trim().min(1, 'Display name is required').max(80),
   password: PasswordSchema,
 })

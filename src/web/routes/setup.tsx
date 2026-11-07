@@ -40,8 +40,10 @@ function SetupPage() {
         <Field label="Your name">
           {(p) => <Input {...p} autoComplete="name" required value={form.displayName} onChange={set('displayName')} />}
         </Field>
-        <Field label="Username">
-          {(p) => <Input {...p} autoComplete="username" required value={form.username} onChange={set('username')} />}
+        <Field label="Your Up $handle" hint="You'll log in with this. It also matches joint spending on 2Up to you.">
+          {(p) => (
+            <Input {...p} autoComplete="username" required maxLength={50} placeholder="$yourname" value={form.username} onChange={set('username')} />
+          )}
         </Field>
         <Field label="Password" hint="At least 8 characters" error={create.error ? errorMessage(create.error) : null}>
           {(p) => (

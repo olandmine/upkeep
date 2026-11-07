@@ -18,6 +18,9 @@ const put = (body: unknown, c = cookie) => t.json('/api/settings/up-token', { me
 const patch = (body: unknown, c = cookie) => t.json('/api/me', { method: 'PATCH', body, cookie: c })
 const me = async (c = cookie) => (await t.json('/api/me', { cookie: c })).json()
 const row = (username = OWNER.username) => t.db.select().from(s.users).where(eq(s.users.username, username)).get()!
+// New logins come with a handle; an account made before that may have none.
+const withoutHandle = (username = OWNER.username) =>
+  t.db.update(s.users).set({ upDisplayName: null }).where(eq(s.users.username, username)).run()
 
 test('connecting saves the handle before the import starts', async () => {
   let seenByScheduler: string | null | undefined
@@ -37,7 +40,7 @@ test('a rejected token saves nothing', async () => {
   expect(res.status).toBe(400)
   expect(await res.json()).toEqual({ error: "Up didn't accept that token" })
   const body = await me()
-  expect(body.upDisplayName).toBeNull()
+  expect(body.upDisplayName).toBe('$owner')
   expect(body.connectUpAnswered).toBe(false)
   expect(t.scheduler.triggered).toEqual([])
 })
@@ -50,21 +53,30 @@ test('skipping answers, and saves a handle if typed', async () => {
   expect(row().upHandleLeftBlank).toBe(false)
 })
 
-test('leaving the handle blank is remembered', async () => {
+test('a new login comes with a handle, so answering never counts it as blank', async () => {
+  await patch({ connectUpSkipped: true })
+  expect(row().upHandleLeftBlank).toBe(false)
+})
+
+test('an older account with no handle is remembered as leaving it blank', async () => {
+  withoutHandle()
   await patch({ connectUpSkipped: true })
   expect(row().upHandleLeftBlank).toBe(true)
 
   const partner = await t.addPartner(cookie)
+  withoutHandle(PARTNER.username)
   t.fake.addCustomer('up:yeah:partner', ['acc-1'])
   await put({ token: 'up:yeah:partner' }, partner)
   expect(row(PARTNER.username).upHandleLeftBlank).toBe(true)
 })
 
 test('a whitespace-only handle counts as blank', async () => {
+  withoutHandle()
   await put({ token: TOKEN, upDisplayName: '   ' })
   expect(row().upHandleLeftBlank).toBe(true)
 
   const partner = await t.addPartner(cookie)
+  withoutHandle(PARTNER.username)
   t.fake.addCustomer('up:yeah:partner', ['acc-1'])
   await patch({ upDisplayName: '$sam' }, partner)
   await put({ token: 'up:yeah:partner', upDisplayName: '   ' }, partner)
@@ -79,6 +91,7 @@ test('connecting from Settings answers too', async () => {
 })
 
 test('answering happens once', async () => {
+  withoutHandle()
   await patch({ connectUpSkipped: true })
   await patch({ upDisplayName: '$sam' })
   await t.json('/api/settings/up-token', { method: 'DELETE', cookie })

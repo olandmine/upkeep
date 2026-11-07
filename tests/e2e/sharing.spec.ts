@@ -21,7 +21,7 @@ test('each person chooses what the other sees, and the server holds to it', asyn
   await page.getByRole('link', { name: 'Settings' }).click()
   await page.getByRole('button', { name: 'Add partner' }).click()
   await page.getByLabel("Partner's name").fill('Sam')
-  await page.getByLabel('Username').fill('sam')
+  await page.getByLabel('Their Up $handle').fill('$sam')
   await page.getByLabel('Initial password').fill('second horse')
   await page.getByRole('button', { name: 'Create login' }).click()
   await expect(page.getByText('@sam')).toBeVisible()
