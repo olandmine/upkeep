@@ -182,11 +182,59 @@ test('wizard step 2: says what Create buckets needs while it is disabled', async
   expect(screen.queryByText(hint)).not.toBeInTheDocument()
 })
 
+const splitItem = (saverId: string, amountCents: number, targetName: string) => ({
+  targetKind: 'saver' as const,
+  lineId: null,
+  saverAccountId: saverId,
+  saverId,
+  amountCents,
+  targetName,
+})
+
+test('wizard step 2: Start from pay split fills in your Savers, which can still be changed', async () => {
+  const props = wizard({
+    proposal: {
+      expectedIncomeCents: 400000,
+      items: [splitItem('s1', 80000, 'Rent'), splitItem('s2', 30000, 'Food'), splitItem('joint', 5000, 'Bills')],
+    },
+  })
+  await userEvent.click(screen.getAllByRole('button', { name: /This is my pay/ })[0])
+  await userEvent.click(await screen.findByRole('button', { name: 'Continue' }))
+
+  expect(screen.getByText('Up moved money into 2 of your Savers after your last pay of $4,000.00.')).toBeInTheDocument()
+  await userEvent.type(screen.getByLabelText('Amount for Rent'), '1')
+  await userEvent.click(screen.getByRole('button', { name: 'Skip Food' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Start from pay split' }))
+
+  expect(screen.getByLabelText('Amount for Rent')).toHaveValue('800.00')
+  expect(screen.getByLabelText('Amount for Food')).toHaveValue('300.00')
+  expect(screen.queryByLabelText('Amount for Bills')).not.toBeInTheDocument()
+  expect(props.onCreateLines).not.toHaveBeenCalled()
+
+  await userEvent.clear(screen.getByLabelText('Amount for Rent'))
+  await userEvent.type(screen.getByLabelText('Amount for Rent'), '750')
+  await userEvent.click(screen.getByRole('button', { name: 'Create buckets' }))
+  expect(props.onCreateLines).toHaveBeenCalledWith([
+    { kind: 'fund', name: 'Rent', amountCents: 75000, categoryIds: [], saverAccountId: 's1' },
+    { kind: 'fund', name: 'Food', amountCents: 30000, categoryIds: [], saverAccountId: 's2' },
+  ])
+})
+
+test.each([
+  ['nothing moved', null],
+  ['only Savers that are not listed here', { expectedIncomeCents: 400000, items: [splitItem('joint', 5000, 'Bills')] }],
+])('wizard step 2: no Start from pay split with %s', async (_, proposal) => {
+  wizard({ proposal })
+  await userEvent.click(screen.getAllByRole('button', { name: /This is my pay/ })[0])
+  await userEvent.click(await screen.findByRole('button', { name: 'Continue' }))
+  expect(screen.queryByRole('button', { name: 'Start from pay split' })).not.toBeInTheDocument()
+})
+
 test('wizard step 3: save the proposed plan or skip', async () => {
   const props = wizard({
     proposal: {
       expectedIncomeCents: 400000,
-      items: [{ targetKind: 'saver', lineId: null, saverAccountId: 's1', amountCents: 80000, targetName: 'Rent' }],
+      items: [splitItem('s1', 80000, 'Rent')],
     },
   })
   await userEvent.click(screen.getAllByRole('button', { name: /This is my pay/ })[0])

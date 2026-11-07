@@ -12,11 +12,22 @@ test('mark pay, create buckets, and try changes to the plan', async ({ page }) =
 
   await page.getByRole('link', { name: 'Budgets', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Budgets' })).toBeVisible()
+  // The fake Up only moves money to the joint Rent Saver, which the personal wizard doesn't list, so Food is added here.
+  await page.route('**/api/plan-template/from-last-pay', async (route) => {
+    const response = await route.fetch()
+    const proposal = await response.json()
+    const food = { targetKind: 'saver', lineId: null, saverAccountId: 'acc-food', saverId: 'acc-food', amountCents: 12_345 }
+    await route.fulfill({ response, json: { ...proposal, items: [...proposal.items, food] } })
+  })
   await page.getByRole('button', { name: /This is my pay: ACME PAY/ }).click()
   await expect(page.getByText(/^Found \d+ paydays since/)).toBeVisible()
   await page.getByRole('button', { name: 'Continue' }).click()
 
   await expect(page.getByLabel('Amount for Food')).toBeVisible()
+  await page.getByRole('button', { name: 'Start from pay split' }).click()
+  await expect(page.getByLabel('Amount for Food')).toHaveValue('123.45')
+  await page.getByLabel('Amount for Food').clear()
+  await page.unroute('**/api/plan-template/from-last-pay')
   await page.getByRole('button', { name: 'Add a spending bucket' }).click()
   await page.getByLabel('Name for new bucket').fill('Groceries')
   await page.getByLabel('Amount for Groceries').fill('600')

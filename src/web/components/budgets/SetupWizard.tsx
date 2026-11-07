@@ -7,6 +7,7 @@ import type {
   LineInputDto,
   PayCandidateDto,
   PlanItemInput,
+  PlanProposalDto,
   UserDto,
 } from '../../../shared/types'
 import { Button } from '../ui/Button'
@@ -16,7 +17,7 @@ import { money, parseDollars } from './format'
 
 export interface PlanProposal {
   expectedIncomeCents: number
-  items: (PlanItemInput & { targetName: string })[]
+  items: (PlanProposalDto['items'][number] & { targetName: string })[]
 }
 
 interface Props {
@@ -189,10 +190,22 @@ export function SetupWizard(props: Props) {
       setStep(4)
       props.onDone()
     }
+    // Other Savers Up moved money into, such as joint ones, have no row here. The plan step offers them.
+    const fromSplit = (proposal?.items ?? []).filter((i) => savers.some((s) => s.id === i.saverId))
     return (
       <Card>
         <CardHeader title="Create buckets" />
         <div className="flex flex-col gap-3">
+          {proposal && fromSplit.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="type-caption text-fg-3">
+                {`Up moved money into ${fromSplit.length} of your Savers after your last pay of ${money(proposal.expectedIncomeCents)}.`}
+              </p>
+              <Button onClick={() => fromSplit.forEach((i) => set(i.saverId, { amount: (i.amountCents / 100).toFixed(2), skipped: false }))}>
+                Start from pay split
+              </Button>
+            </div>
+          )}
           {drafts
             .filter((d) => !d.skipped)
             .map((d) => (
