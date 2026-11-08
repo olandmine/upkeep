@@ -4,6 +4,8 @@ A self-hosted finance tracker for a two-person household, built on the [Up Banki
 
 Upkeep isn't affiliated with or endorsed by Up. It only works with Up accounts, and you need an Up personal access token for each person.
 
+![The Overview page: balances, this month's spending and income, and a chart of where the last pay went](.github/screenshots/overview.png)
+
 ## What it does
 
 - **Overview:** income and spending, and a chart of where each pay went.
@@ -13,6 +15,19 @@ Upkeep isn't affiliated with or endorsed by Up. It only works with Up accounts, 
 - **Debts:** manual debts with interest, repayments and payoff projections, including importing an ATO HELP statement.
 - **Net worth:** your history over time.
 - **Sharing:** each person chooses how much of their personal money the other can see. Joint accounts are always shared.
+
+| Budgets | Transactions |
+| --- | --- |
+| ![The Budgets page for one pay: what's left to spend, spending limits, and the plan for each Saver](.github/screenshots/budgets.png) | ![The Transactions page: search, filters, and transactions grouped by day](.github/screenshots/transactions.png) |
+
+It works on a phone too:
+
+<p>
+  <img src=".github/screenshots/overview-mobile.png" alt="The Overview page on a phone" width="260">
+  <img src=".github/screenshots/budgets-mobile.png" alt="The Budgets page on a phone" width="260">
+</p>
+
+The screenshots use made-up data.
 
 ## Requirements
 
