@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
-import type { DebtDto, DebtInputDto, HelpDebtInputDto, HelpImportSummaryDto } from '../../shared/types'
+import { useState } from 'react'
+import type { DebtDto, DebtInputDto, DebtRange, HelpDebtInputDto, HelpImportSummaryDto } from '../../shared/types'
 import { RouterLink } from '../components/AppLink'
 import { money } from '../components/budgets/format'
 import { DebtCard } from '../components/debts/DebtCard'
 import { DebtForm } from '../components/debts/DebtForm'
+import { DebtTimelineChart } from '../components/debts/DebtTimelineChart'
 import { monthLabel } from '../components/debts/format'
 import { PayoffPlan } from '../components/debts/PayoffPlan'
 import { PrivateNotice } from '../components/sharing/PrivateNotice'
@@ -15,7 +17,7 @@ import { Card, CardHeader } from '../components/ui/Card'
 import { useToast } from '../components/ui/Toast'
 import { client, errorMessage, unwrap } from '../lib/api'
 import { useDraft } from '../lib/draft'
-import { debtsQuery, invalidateAfterDebtEdit, meQuery, payoffPlanQuery } from '../lib/queries'
+import { debtsQuery, debtsTimelineQuery, invalidateAfterDebtEdit, meQuery, payoffPlanQuery } from '../lib/queries'
 import { useScope } from '../lib/scope'
 import { usePartnerHides } from '../lib/sharing'
 
@@ -43,6 +45,8 @@ function DebtsPage() {
   const [adding, setAdding] = useDraft('debts:adding', false)
   const { data: me } = useQuery(meQuery)
   const debts = useQuery(debtsQuery(scope))
+  const [range, setRange] = useState<DebtRange>('all')
+  const timeline = useQuery(debtsTimelineQuery(scope, range))
   const plan = useQuery(payoffPlanQuery(scope))
 
   const create = useMutation({
@@ -130,6 +134,15 @@ function DebtsPage() {
               <DebtCard key={d.id} debt={d} showOwner={scope === 'everyone'} LinkComponent={RouterLink} />
             ))}
           </div>
+          {timeline.data && timeline.data.length > 0 && (
+            <Card>
+              <DebtTimelineChart
+                timeline={timeline.data}
+                label="Total debt balance over time"
+                range={{ value: range, onChange: setRange }}
+              />
+            </Card>
+          )}
           {plan.data && <PayoffPlan plan={plan.data} onChange={(body) => settings.mutate(body)} />}
         </>
       )}

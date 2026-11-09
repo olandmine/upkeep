@@ -8,6 +8,7 @@ import {
   addBalance,
   createDebt,
   debtsInScope,
+  debtsTimeline,
   deleteDebt,
   requireVisibleDebt,
   removeBalance,
@@ -107,6 +108,21 @@ export function debtsRoutes(deps: AppDeps) {
         200,
       )
     })
+    .get(
+      '/timeline',
+      validate(
+        'query',
+        z.object({
+          scope: ScopeSchema.default('everyone'),
+          range: z.enum(['week', 'month', 'year', 'fy', 'all']).default('all'),
+        }),
+      ),
+      (c) => {
+        const { scope, range } = c.req.valid('query')
+        const debts = debtsInScope(deps.db, scope, c.get('user').id)
+        return c.json(debtsTimeline(deps.db, debts, today(), deps.tz, range), 200)
+      },
+    )
     .post('/', validate('json', DebtBody), (c) =>
       budgetJson(
         c,

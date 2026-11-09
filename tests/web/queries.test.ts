@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { afterEach, expect, test, vi } from 'vitest'
-import { meQuery, setupStatusQuery } from '../../src/web/lib/queries'
+import { debtsTimelineQuery, meQuery, setupStatusQuery } from '../../src/web/lib/queries'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -27,4 +27,8 @@ test('a 401 from /api/me is not retried', async () => {
   vi.stubGlobal('fetch', fetchMock)
   await expect(new QueryClient().fetchQuery(meQuery)).rejects.toMatchObject({ status: 401 })
   expect(fetchMock).toHaveBeenCalledTimes(1)
+})
+
+test('the debts total timeline refreshes with debt edits', () => {
+  expect(debtsTimelineQuery('me', 'fy').queryKey).toEqual(['debts', 'me', 'timeline', 'fy'])
 })

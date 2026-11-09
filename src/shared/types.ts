@@ -379,8 +379,16 @@ export interface DebtRepaymentDto {
   oneOff: boolean
 }
 
+/** How far back the Debts page's total chart reaches. Week, month and year count back from today; FY starts on 1 July. */
+export type DebtRange = 'week' | 'month' | 'year' | 'fy' | 'all'
+
+export interface DebtBalancePoint {
+  date: string
+  balanceCents: number
+}
+
 export interface DebtDetailDto extends DebtDto {
-  timeline: { date: string; balanceCents: number }[]
+  timeline: DebtBalancePoint[]
   balances: { id: string; asOf: string; balanceCents: number; correctionCents: number | null }[]
   rates: DebtRateDto[]
   /** Newest first. */

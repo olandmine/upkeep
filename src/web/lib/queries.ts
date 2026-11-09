@@ -1,10 +1,12 @@
-import { infiniteQueryOptions, queryOptions, type QueryClient } from '@tanstack/react-query'
+import { infiniteQueryOptions, keepPreviousData, queryOptions, type QueryClient } from '@tanstack/react-query'
 import type {
   AccountDto,
   BudgetDto,
   BudgetPeriodDto,
   CategoryDto,
+  DebtBalancePoint,
   DebtDetailDto,
+  DebtRange,
   DebtDto,
   GettingStartedDto,
   GoalDebtOptionDto,
@@ -192,6 +194,15 @@ export const debtsQuery = (scope: Scope) =>
   queryOptions({
     queryKey: ['debts', scope],
     queryFn: () => unwrap<DebtDto[]>(client.api.debts.$get({ query: { scope } })),
+  })
+
+export const debtsTimelineQuery = (scope: Scope, range: DebtRange) =>
+  queryOptions({
+    // Under 'debts', so invalidateAfterDebtEdit refreshes it.
+    queryKey: ['debts', scope, 'timeline', range],
+    queryFn: () => unwrap<DebtBalancePoint[]>(client.api.debts.timeline.$get({ query: { scope, range } })),
+    // The last range stays on screen, with its buttons, until the next one arrives.
+    placeholderData: keepPreviousData,
   })
 
 export const debtQuery = (id: string) =>

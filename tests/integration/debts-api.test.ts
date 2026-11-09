@@ -1,5 +1,5 @@
 import { beforeEach, expect, test } from 'vitest'
-import type { DebtDetailDto, DebtDto, DebtInputDto } from '../../src/shared/types'
+import type { DebtBalancePoint, DebtDetailDto, DebtDto, DebtInputDto } from '../../src/shared/types'
 import { createTestApp, type TestApp } from '../helpers/app'
 
 const NOW = new Date('2026-10-30T01:00:00Z') // 12:00 in Sydney
@@ -32,6 +32,8 @@ const create = async (over: Partial<DebtInputDto> = {}, cookie = owner) =>
 const list = async (scope: string, cookie = owner) =>
   (await call(`/api/debts?scope=${scope}`, { cookie })).body as DebtDto[]
 const detail = async (id: string) => (await call(`/api/debts/${id}`)).body as DebtDetailDto
+const timeline = async (scope: string, cookie = owner, range?: string) =>
+  (await call(`/api/debts/timeline?scope=${scope}${range ? `&range=${range}` : ''}`, { cookie })).body as DebtBalancePoint[]
 
 beforeEach(async () => {
   t = createTestApp({ now: NOW })
@@ -226,4 +228,43 @@ test('a fee must be more than $0 with a real date', async () => {
   const bad = await create({ fee: { amountCents: 0, frequency: 'monthly', from: '2026-10-05' } })
   expect(bad).toMatchObject({ status: 400, body: { error: 'Fee must be more than $0.' } })
   expect((await create({ fee: { amountCents: 100, frequency: 'monthly', from: '2026-02-30' } })).status).toBe(400)
+})
+
+test('total timeline sums debts on shared weekly dates', async () => {
+  const a = (await create({ rateBp: 0, repaymentCents: 0, asOf: '2026-08-01', balanceCents: 1_000_000 })).body.id
+  await create({ name: 'Card', rateBp: 0, repaymentCents: 0, asOf: '2026-10-01', balanceCents: 200_000 })
+  const points = await timeline('everyone')
+  expect(points.map((p) => p.date)).toEqual((await detail(a)).timeline.map((p) => p.date))
+  expect(points[0]).toEqual({ date: '2026-08-01', balanceCents: 1_000_000 })
+  expect(points.find((p) => p.date === '2026-09-25')?.balanceCents).toBe(1_000_000) // before Card starts
+  expect(points.find((p) => p.date === '2026-10-02')?.balanceCents).toBe(1_200_000)
+  const owed = (await list('everyone')).reduce((s, d) => s + d.balanceCents, 0)
+  expect(points.at(-1)).toEqual({ date: '2026-10-30', balanceCents: owed })
+})
+
+test('total timeline follows scope', async () => {
+  const partnerId = (await call('/api/me', { cookie: partner })).body.id
+  await create({ rateBp: 0, repaymentCents: 0, balanceCents: 100_000 })
+  await create({ name: 'Theirs', ownerUserId: partnerId, rateBp: 0, repaymentCents: 0, balanceCents: 50_000 }, partner)
+  expect((await timeline('me')).at(-1)?.balanceCents).toBe(100_000)
+  expect((await timeline('everyone')).at(-1)?.balanceCents).toBe(150_000)
+  expect(await timeline('joint')).toEqual([])
+})
+
+test('total timeline ranges: daily for week and month, weekly from 1 July for FY', async () => {
+  await create({ rateBp: 0, repaymentCents: 0, asOf: '2026-06-01', balanceCents: 500_000 })
+  const dates = async (range: string) => (await timeline('everyone', owner, range)).map((p) => p.date)
+  expect(await dates('week')).toEqual(['2026-10-23', '2026-10-24', '2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30'])
+  const month = await dates('month')
+  expect([month[0], month.length, month.at(-1)]).toEqual(['2026-09-30', 31, '2026-10-30'])
+  const fy = await dates('fy')
+  expect([fy[0], fy[1], fy.at(-1)]).toEqual(['2026-07-01', '2026-07-03', '2026-10-30'])
+  // A range reaching back past the first balance starts there, as All does.
+  expect(await dates('year')).toEqual(await dates('all'))
+  expect((await dates('all'))[0]).toBe('2026-06-01')
+  expect((await timeline('everyone', owner, 'week')).at(-1)?.balanceCents).toBe(500_000)
+})
+
+test('total timeline rejects an unknown range', async () => {
+  expect((await call('/api/debts/timeline?range=decade')).status).toBe(400)
 })
