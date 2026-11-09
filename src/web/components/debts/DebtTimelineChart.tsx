@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { formatCompact } from '../../../shared/money'
-import type { DebtDetailDto } from '../../../shared/types'
+import type { DebtBalancePoint, DebtDetailDto } from '../../../shared/types'
 import { money, shortDate } from '../budgets/format'
 import { Button } from '../ui/Button'
 import { longDate } from './DebtSections'
@@ -33,7 +33,15 @@ function ChartTooltip({ active, payload }: TooltipContentProps<ValueType, NameTy
 }
 
 /** Balance since the first starting point, with entered balances marked. */
-export function DebtTimelineChart({ timeline, balances }: Pick<DebtDetailDto, 'timeline' | 'balances'>) {
+export function DebtTimelineChart({
+  timeline,
+  balances = [],
+  label = 'Debt balance over time',
+}: {
+  timeline: DebtBalancePoint[]
+  balances?: DebtDetailDto['balances']
+  label?: string
+}) {
   const [table, setTable] = useState(false)
   const byDate = new Map<string, Row>(timeline.map((p) => [p.date, { ...p, entered: false }]))
   for (const b of balances) byDate.set(b.asOf, { date: b.asOf, balanceCents: b.balanceCents, entered: true })
@@ -67,7 +75,7 @@ export function DebtTimelineChart({ timeline, balances }: Pick<DebtDetailDto, 't
           </table>
         </div>
       ) : (
-        <div className="h-56" role="img" aria-label="Debt balance over time">
+        <div className="h-56" role="img" aria-label={label}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <CartesianGrid vertical={false} stroke="var(--border-subtle)" />

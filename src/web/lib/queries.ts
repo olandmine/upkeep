@@ -4,6 +4,7 @@ import type {
   BudgetDto,
   BudgetPeriodDto,
   CategoryDto,
+  DebtBalancePoint,
   DebtDetailDto,
   DebtDto,
   GettingStartedDto,
@@ -192,6 +193,13 @@ export const debtsQuery = (scope: Scope) =>
   queryOptions({
     queryKey: ['debts', scope],
     queryFn: () => unwrap<DebtDto[]>(client.api.debts.$get({ query: { scope } })),
+  })
+
+export const debtsTimelineQuery = (scope: Scope) =>
+  queryOptions({
+    // Under 'debts', so invalidateAfterDebtEdit refreshes it.
+    queryKey: ['debts', scope, 'timeline'],
+    queryFn: () => unwrap<DebtBalancePoint[]>(client.api.debts.timeline.$get({ query: { scope } })),
   })
 
 export const debtQuery = (id: string) =>
