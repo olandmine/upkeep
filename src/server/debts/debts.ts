@@ -1,6 +1,7 @@
 import { and, asc, count, eq, isNotNull, isNull, ne } from 'drizzle-orm'
 import type {
   DebtBalancePoint,
+  DebtRange,
   DebtDetailDto,
   DebtDto,
   DebtFeeDto,
@@ -11,8 +12,9 @@ import type {
   Scope,
 } from '../../shared/types'
 import { interestDefaults } from '../../shared/debt-interest'
-import { addDays, dayOfMonth, type LocalDate } from '../budgets/dates'
+import { addDays, addMonthsClamped, dayOfMonth, type LocalDate } from '../budgets/dates'
 import { BudgetError } from '../budgets/errors'
+import { rangeSpan } from '../payflow/range'
 import type { Db } from '../db/client'
 import * as s from '../db/schema'
 import type { DebtRow } from '../db/schema'
@@ -417,14 +419,34 @@ export function weeklyDates(first: LocalDate, today: LocalDate): LocalDate[] {
   return dates
 }
 
-/** The debts' combined balance on weekly dates from the earliest starting point; a debt adds 0 before its first. */
-export function debtsTimeline(db: Db, debts: DebtRow[], today: LocalDate, tz: string): DebtBalancePoint[] {
+/** Where a range starts, before it's held to the first balance. */
+function rangeStart(range: Exclude<DebtRange, 'all'>, today: LocalDate): LocalDate {
+  if (range === 'week') return addDays(today, -7)
+  if (range === 'fy') return rangeSpan('fy', today, today).start
+  return addMonthsClamped(today, range === 'month' ? -1 : -12, dayOfMonth(today))
+}
+
+/**
+ * The debts' combined balance from the range's start (never before the earliest first balance) to today:
+ * daily for a week or month, weekly otherwise. A debt adds 0 before its first balance.
+ */
+export function debtsTimeline(
+  db: Db,
+  debts: DebtRow[],
+  today: LocalDate,
+  tz: string,
+  range: DebtRange = 'all',
+): DebtBalancePoint[] {
   const ledgers = debts.map((debt) => debtLedgerFor(db, debt, today, tz))
   const firsts = ledgers.flatMap(({ points }) => (points[0] ? [points[0].asOf] : []))
   if (firsts.length === 0) return []
   const first = firsts.reduce((a, b) => (b < a ? b : a))
+  const start = range === 'all' ? first : [rangeStart(range, today), first].reduce((a, b) => (b > a ? b : a))
+  const dates: LocalDate[] = []
+  if (range === 'week' || range === 'month') for (let d = start; d <= today; d = addDays(d, 1)) dates.push(d)
+  else dates.push(...weeklyDates(start, today))
   const byDate = ledgers.map(({ ledger }) => new Map(ledger.days.map((d) => [d.date, d.balance])))
-  return weeklyDates(first, today).map((date) => ({
+  return dates.map((date) => ({
     date,
     balanceCents: byDate.reduce((sum, m) => sum + Math.round(m.get(date) ?? 0), 0),
   }))

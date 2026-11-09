@@ -11,12 +11,21 @@ import {
 } from 'recharts'
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { formatCompact } from '../../../shared/money'
-import type { DebtBalancePoint, DebtDetailDto } from '../../../shared/types'
+import type { DebtBalancePoint, DebtDetailDto, DebtRange } from '../../../shared/types'
 import { money, shortDate } from '../budgets/format'
 import { Button } from '../ui/Button'
+import { RangeGroup } from '../ui/RangeGroup'
 import { longDate } from './DebtSections'
 
 const COLOR = '#4c8dff' // --cat-blue
+
+export const DEBT_RANGES: { value: DebtRange; label: string }[] = [
+  { value: 'week', label: '1W' },
+  { value: 'month', label: '1M' },
+  { value: 'year', label: '1Y' },
+  { value: 'fy', label: 'FY' },
+  { value: 'all', label: 'All' },
+]
 
 type Row = { date: string; balanceCents: number; entered: boolean }
 
@@ -37,10 +46,13 @@ export function DebtTimelineChart({
   timeline,
   balances = [],
   label = 'Debt balance over time',
+  range,
 }: {
   timeline: DebtBalancePoint[]
   balances?: DebtDetailDto['balances']
   label?: string
+  /** Shows range buttons when given. */
+  range?: { value: DebtRange; onChange: (range: DebtRange) => void }
 }) {
   const [table, setTable] = useState(false)
   const byDate = new Map<string, Row>(timeline.map((p) => [p.date, { ...p, entered: false }]))
@@ -49,11 +61,14 @@ export function DebtTimelineChart({
 
   return (
     <figure className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <figcaption className="type-label text-fg-2">Balance over time</figcaption>
-        <Button variant="ghost" className="ml-auto" onClick={() => setTable((t) => !t)}>
-          {table ? 'Show chart' : 'Show table'}
-        </Button>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {range && <RangeGroup options={DEBT_RANGES} value={range.value} onChange={range.onChange} />}
+          <Button variant="ghost" onClick={() => setTable((t) => !t)}>
+            {table ? 'Show chart' : 'Show table'}
+          </Button>
+        </div>
       </div>
       {table ? (
         <div className="max-h-72 overflow-auto">

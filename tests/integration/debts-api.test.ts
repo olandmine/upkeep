@@ -32,8 +32,8 @@ const create = async (over: Partial<DebtInputDto> = {}, cookie = owner) =>
 const list = async (scope: string, cookie = owner) =>
   (await call(`/api/debts?scope=${scope}`, { cookie })).body as DebtDto[]
 const detail = async (id: string) => (await call(`/api/debts/${id}`)).body as DebtDetailDto
-const timeline = async (scope: string, cookie = owner) =>
-  (await call(`/api/debts/timeline?scope=${scope}`, { cookie })).body as DebtBalancePoint[]
+const timeline = async (scope: string, cookie = owner, range?: string) =>
+  (await call(`/api/debts/timeline?scope=${scope}${range ? `&range=${range}` : ''}`, { cookie })).body as DebtBalancePoint[]
 
 beforeEach(async () => {
   t = createTestApp({ now: NOW })
@@ -249,4 +249,22 @@ test('total timeline follows scope', async () => {
   expect((await timeline('me')).at(-1)?.balanceCents).toBe(100_000)
   expect((await timeline('everyone')).at(-1)?.balanceCents).toBe(150_000)
   expect(await timeline('joint')).toEqual([])
+})
+
+test('total timeline ranges: daily for week and month, weekly from 1 July for FY', async () => {
+  await create({ rateBp: 0, repaymentCents: 0, asOf: '2026-06-01', balanceCents: 500_000 })
+  const dates = async (range: string) => (await timeline('everyone', owner, range)).map((p) => p.date)
+  expect(await dates('week')).toEqual(['2026-10-23', '2026-10-24', '2026-10-25', '2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30'])
+  const month = await dates('month')
+  expect([month[0], month.length, month.at(-1)]).toEqual(['2026-09-30', 31, '2026-10-30'])
+  const fy = await dates('fy')
+  expect([fy[0], fy[1], fy.at(-1)]).toEqual(['2026-07-01', '2026-07-03', '2026-10-30'])
+  // A range reaching back past the first balance starts there, as All does.
+  expect(await dates('year')).toEqual(await dates('all'))
+  expect((await dates('all'))[0]).toBe('2026-06-01')
+  expect((await timeline('everyone', owner, 'week')).at(-1)?.balanceCents).toBe(500_000)
+})
+
+test('total timeline rejects an unknown range', async () => {
+  expect((await call('/api/debts/timeline?range=decade')).status).toBe(400)
 })

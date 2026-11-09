@@ -12,11 +12,11 @@ import {
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { formatCompact } from '../../../shared/money'
 import type { GoalDetailDto, GoalRange } from '../../../shared/types'
-import { cn } from '../../lib/cn'
 import { money, shortDate } from '../budgets/format'
 import { longDate } from '../debts/DebtSections'
 import { monthLabel } from '../debts/format'
 import { Button } from '../ui/Button'
+import { RangeGroup } from '../ui/RangeGroup'
 import {
   chartDomain,
   chartRows,
@@ -96,29 +96,6 @@ function Legend({ series }: { series: Series[] }) {
   )
 }
 
-function RangeGroup({ range, onRange }: { range: GoalRange; onRange: (range: GoalRange) => void }) {
-  return (
-    <div role="group" aria-label="Range" className="flex gap-1">
-      {GOAL_RANGES.map((r) => (
-        <button
-          key={r.value}
-          type="button"
-          aria-pressed={r.value === range}
-          onClick={() => onRange(r.value)}
-          className={cn(
-            'type-label h-7 rounded-full border px-3 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-            r.value === range
-              ? 'border-accent/40 bg-accent-muted text-accent'
-              : 'border-line-2 text-fg-2 hover:bg-elevated hover:text-fg',
-          )}
-        >
-          {r.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 /** The Saver's balance against its target, with the dashed paths ahead of it, and a table as the text alternative. */
 export function GoalChart({
   detail,
@@ -156,7 +133,7 @@ export function GoalChart({
         <figcaption className="type-label text-fg-2">Balance over time</figcaption>
         {series.length > 1 && <Legend series={series} />}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <RangeGroup range={range} onRange={onRange} />
+          <RangeGroup options={GOAL_RANGES} value={range} onChange={onRange} />
           <Button variant="ghost" onClick={() => setTable((t) => !t)}>
             {table ? 'Show chart' : 'Show table'}
           </Button>

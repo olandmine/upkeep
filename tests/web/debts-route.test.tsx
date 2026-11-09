@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import type { ComponentType, ReactNode } from 'react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import type { DebtBalancePoint, DebtDto, PayoffPlanDto } from '../../src/shared/types'
@@ -60,10 +61,12 @@ const plan: PayoffPlanDto = {
 }
 
 let debts: DebtDto[]
+let requests: string[]
 let timeline: DebtBalancePoint[]
 
 beforeEach(() => {
   debts = [debt]
+  requests = []
   timeline = [
     { date: '2026-10-01', balanceCents: 900_000 },
     { date: '2026-10-30', balanceCents: 820_000 },
@@ -73,9 +76,10 @@ beforeEach(() => {
     vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input))
       const path = url.pathname + url.search
+      requests.push(path)
       if (path === '/api/me') return Response.json({ id: 'u1', displayName: 'Owner' })
       if (path === '/api/debts?scope=everyone') return Response.json(debts)
-      if (path === '/api/debts/timeline?scope=everyone') return Response.json(timeline)
+      if (path.startsWith('/api/debts/timeline?scope=everyone')) return Response.json(timeline)
       if (path === '/api/payoff-plan?scope=everyone') return Response.json(plan)
       return Response.json([])
     }),
@@ -109,4 +113,17 @@ test('no total chart without debts', async () => {
   mount()
   await screen.findByText(/No debts yet/)
   expect(screen.queryByRole('img', { name: 'Total debt balance over time' })).not.toBeInTheDocument()
+})
+
+test('the total chart starts at All and switches range', async () => {
+  mount()
+  const group = within(await screen.findByRole('group', { name: 'Range' }))
+  expect(group.getAllByRole('button').map((b) => b.textContent)).toEqual(['1W', '1M', '1Y', 'FY', 'All'])
+  expect(group.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true')
+  expect(requests).toContain('/api/debts/timeline?scope=everyone&range=all')
+
+  await userEvent.click(group.getByRole('button', { name: 'FY' }))
+  await waitFor(() => expect(requests).toContain('/api/debts/timeline?scope=everyone&range=fy'))
+  expect(group.getByRole('button', { name: 'FY' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('img', { name: 'Total debt balance over time' })).toBeInTheDocument()
 })

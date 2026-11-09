@@ -30,5 +30,5 @@ test('a 401 from /api/me is not retried', async () => {
 })
 
 test('the debts total timeline refreshes with debt edits', () => {
-  expect(debtsTimelineQuery('me').queryKey).toEqual(['debts', 'me', 'timeline'])
+  expect(debtsTimelineQuery('me', 'fy').queryKey).toEqual(['debts', 'me', 'timeline', 'fy'])
 })
