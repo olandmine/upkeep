@@ -58,6 +58,8 @@ export function DebtTimelineChart({
   const byDate = new Map<string, Row>(timeline.map((p) => [p.date, { ...p, entered: false }]))
   for (const b of balances) byDate.set(b.asOf, { date: b.asOf, balanceCents: b.balanceCents, entered: true })
   const data = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
+  // One point that isn't an entered balance has no line and no dot to draw.
+  const lone = data.length === 1 && !data[0]!.entered ? data[0] : null
 
   return (
     <figure className="flex flex-col gap-3">
@@ -89,6 +91,10 @@ export function DebtTimelineChart({
             </tbody>
           </table>
         </div>
+      ) : lone ? (
+        <p className="type-body text-fg-3">
+          {`${money(lone.balanceCents)} on ${longDate(lone.date)}. The line starts once there’s more than a day to show.`}
+        </p>
       ) : (
         <div className="h-56" role="img" aria-label={label}>
           <ResponsiveContainer width="100%" height="100%">

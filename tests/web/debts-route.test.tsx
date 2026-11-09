@@ -127,3 +127,11 @@ test('the total chart starts at All and switches range', async () => {
   expect(group.getByRole('button', { name: 'FY' })).toHaveAttribute('aria-pressed', 'true')
   expect(screen.getByRole('img', { name: 'Total debt balance over time' })).toBeInTheDocument()
 })
+
+test('a total with only one day says so instead of drawing an empty chart', async () => {
+  timeline = [{ date: '2026-10-30', balanceCents: 820_000 }]
+  mount()
+  expect(await screen.findByText(/The line starts once there.s more than a day to show/)).toHaveTextContent('$8,200.00')
+  expect(screen.queryByRole('img', { name: 'Total debt balance over time' })).not.toBeInTheDocument()
+  expect(screen.getByRole('group', { name: 'Range' })).toBeInTheDocument()
+})
