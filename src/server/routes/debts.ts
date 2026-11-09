@@ -8,6 +8,7 @@ import {
   addBalance,
   createDebt,
   debtsInScope,
+  debtsTimeline,
   deleteDebt,
   requireVisibleDebt,
   removeBalance,
@@ -107,6 +108,12 @@ export function debtsRoutes(deps: AppDeps) {
         200,
       )
     })
+    .get('/timeline', validate('query', z.object({ scope: ScopeSchema.default('everyone') })), (c) =>
+      c.json(
+        debtsTimeline(deps.db, debtsInScope(deps.db, c.req.valid('query').scope, c.get('user').id), today(), deps.tz),
+        200,
+      ),
+    )
     .post('/', validate('json', DebtBody), (c) =>
       budgetJson(
         c,

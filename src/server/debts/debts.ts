@@ -1,5 +1,6 @@
 import { and, asc, count, eq, isNotNull, isNull, ne } from 'drizzle-orm'
 import type {
+  DebtBalancePoint,
   DebtDetailDto,
   DebtDto,
   DebtFeeDto,
@@ -408,6 +409,27 @@ function assemble(db: Db, debt: DebtRow, viewerId: string, today: LocalDate, tz:
   return { dto, ledger, points, rates }
 }
 
+/** `first`, then every 7 days back from `today` that falls after it, ending at today. Ascending. */
+export function weeklyDates(first: LocalDate, today: LocalDate): LocalDate[] {
+  const dates: LocalDate[] = []
+  for (let d = today; d > first; d = addDays(d, -7)) dates.unshift(d)
+  dates.unshift(first)
+  return dates
+}
+
+/** The debts' combined balance on weekly dates from the earliest starting point; a debt adds 0 before its first. */
+export function debtsTimeline(db: Db, debts: DebtRow[], today: LocalDate, tz: string): DebtBalancePoint[] {
+  const ledgers = debts.map((debt) => debtLedgerFor(db, debt, today, tz))
+  const firsts = ledgers.flatMap(({ points }) => (points[0] ? [points[0].asOf] : []))
+  if (firsts.length === 0) return []
+  const first = firsts.reduce((a, b) => (b < a ? b : a))
+  const byDate = ledgers.map(({ ledger }) => new Map(ledger.days.map((d) => [d.date, d.balance])))
+  return weeklyDates(first, today).map((date) => ({
+    date,
+    balanceCents: byDate.reduce((sum, m) => sum + Math.round(m.get(date) ?? 0), 0),
+  }))
+}
+
 export function toDebtDetailDto(
   db: Db,
   debt: DebtRow,
@@ -417,10 +439,7 @@ export function toDebtDetailDto(
 ): DebtDetailDto {
   const { dto, ledger, points, rates } = assemble(db, debt, viewerId, today, tz)
   const byDate = new Map(ledger.days.map((d) => [d.date, d.balance]))
-  const first = points[0]!.asOf
-  const dates: LocalDate[] = []
-  for (let d = today; d > first; d = addDays(d, -7)) dates.unshift(d)
-  dates.unshift(first)
+  const dates = weeklyDates(points[0]!.asOf, today)
   // Repayments from an account the viewer can't see stay in the balance but not in the lists.
   const repaymentIds = ledger.activity.flatMap((a) => (a.kind === 'repayment' ? [a.transactionId] : []))
   const hidden = hiddenTransactionIds(db, viewerId, repaymentIds)

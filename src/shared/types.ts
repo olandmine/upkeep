@@ -379,8 +379,13 @@ export interface DebtRepaymentDto {
   oneOff: boolean
 }
 
+export interface DebtBalancePoint {
+  date: string
+  balanceCents: number
+}
+
 export interface DebtDetailDto extends DebtDto {
-  timeline: { date: string; balanceCents: number }[]
+  timeline: DebtBalancePoint[]
   balances: { id: string; asOf: string; balanceCents: number; correctionCents: number | null }[]
   rates: DebtRateDto[]
   /** Newest first. */
